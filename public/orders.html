@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>Painel de pedidos | Thindesk</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/orders-app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="Thindesk início"><span class="brand-mark">T</span><span>thin<span class="brand-light">desk</span></span></a>
+        <div class="workspace-label">WORKSPACE</div>
+        <div class="workspace-switch"><span class="workspace-icon">PD</span><span>Pedidos da lanchonete</span><span class="chevron">⌄</span></div>
+        <nav class="navigation" aria-label="Navegação principal">
+          <div class="nav-caption">OPERAÇÃO</div>
+          <a class="nav-link" href="/"><span class="nav-icon">▦</span>Chamados técnicos</a>
+          <a class="nav-link active" href="/orders"><span class="nav-icon">▤</span>Pedidos</a>
+          <a class="nav-link" href="#charts"><span class="nav-icon">◷</span>Relatórios</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="profile-avatar">MC</div>
+          <div class="profile-details"><strong>Mariana Costa</strong><span>Administradora</span></div>
+          <span class="more">···</span>
+        </div>
+      </aside>
+
+      <main class="main-content" id="overview">
+        <header class="topbar">
+          <div class="breadcrumbs">Painel <span>/</span> Pedidos</div>
+          <div class="topbar-right"><span class="live-dot"></span><span>Dados atualizados agora</span><button class="icon-button" id="refreshButton" aria-label="Atualizar dados" title="Atualizar dados">↻</button></div>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">CENTRAL DE OPERAÇÕES</p>
+            <h1>Pedidos</h1>
+            <p class="subheading">Acompanhe o movimento, o preparo e as vendas da lanchonete.</p>
+          </div>
+          <div class="date-range">
+            <label for="fromDate">De</label><input id="fromDate" type="date">
+            <span class="date-separator">—</span>
+            <label for="toDate">Até</label><input id="toDate" type="date">
+          </div>
+        </section>
+
+        <section class="filters" aria-label="Filtros de pedidos">
+          <div class="filter-group"><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Todos os status</option><option value="recebido">Recebido</option><option value="preparando">Em preparo</option><option value="pronto">Pronto</option><option value="entregue">Entregue</option><option value="cancelado">Cancelado</option></select></div>
+          <div class="filter-group"><label for="typeFilter">Modalidade</label><select id="typeFilter"><option value="">Todas as modalidades</option></select></div>
+          <button class="button button-primary" id="applyFilters">Aplicar filtros</button>
+          <button class="button button-quiet" id="clearFilters">Limpar</button>
+          <span class="filter-hint">O painel atualiza automaticamente a cada 60 segundos.</span>
+        </section>
+
+        <div class="error-banner" id="errorBanner" role="alert" hidden></div>
+
+        <section class="metrics-grid" aria-label="Indicadores gerais de pedidos">
+          <article class="metric-card"><div class="metric-top"><span>Total de pedidos</span><span class="metric-icon blue">▤</span></div><div class="metric-value" id="metricTotal">—</div><div class="metric-foot"><span class="metric-neutral">No período selecionado</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Em aberto</span><span class="metric-icon amber">◷</span></div><div class="metric-value" id="metricPending">—</div><div class="metric-foot"><span class="metric-neutral">Aguardando conclusão</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Em preparo</span><span class="metric-icon violet">↗</span></div><div class="metric-value" id="metricPreparing">—</div><div class="metric-foot"><span class="metric-neutral">Na cozinha</span></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Entregues</span><span class="metric-icon green">✓</span></div><div class="metric-value" id="metricDelivered">—</div><div class="metric-foot"><span class="metric-neutral" id="orderRevenue">Vendas: —</span></div></article>
+        </section>
+
+        <section class="charts-grid" id="charts">
+          <article class="panel resolution-panel">
+            <div class="panel-heading"><div><h2>Pedidos atendidos</h2><p>Pedidos entregues por dia no período</p></div><span class="panel-kicker">VOLUME</span></div>
+            <div class="chart-wrap"><canvas id="ordersChart" role="img" aria-label="Gráfico de pedidos entregues por dia"></canvas><div class="chart-empty" id="ordersEmpty" hidden>Sem pedidos entregues neste período.</div></div>
+          </article>
+          <article class="panel status-panel">
+            <div class="panel-heading"><div><h2>Situação dos pedidos</h2><p>Distribuição por status</p></div><span class="panel-kicker">STATUS</span></div>
+            <div class="status-content"><div class="donut-wrap"><canvas id="statusChart" role="img" aria-label="Gráfico de distribuição por status dos pedidos"></canvas><div class="donut-center"><strong id="statusTotal">0</strong><span>pedidos</span></div></div><div class="legend" id="statusLegend"></div></div>
+          </article>
+        </section>
+
+        <section class="lower-grid">
+          <article class="panel ranking-panel">
+            <div class="panel-heading"><div><h2>Tipos mais atendidos</h2><p>Itens vendidos em pedidos entregues</p></div><span class="panel-kicker">TOP 5</span></div>
+            <div class="ranking-list" id="categoryRanking"></div>
+          </article>
+          <article class="panel tickets-panel" id="orders">
+            <div class="panel-heading"><div><h2>Pedidos recentes</h2><p>Últimas solicitações do período</p></div><a class="text-link" href="/api/orders" target="_blank" rel="noreferrer">Ver API <span>↗</span></a></div>
+            <div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Itens</th><th>Status</th><th>Modalidade</th><th>Total</th></tr></thead><tbody id="orderRows"></tbody></table></div>
+          </article>
+        </section>
+        <footer class="footer">Lanchonete <span>·</span> Painel administrativo <span>·</span> Valores em BRL</footer>
+      </main>
+    </div>
+  </body>
+</html>

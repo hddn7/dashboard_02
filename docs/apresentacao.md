@@ -1,27 +1,28 @@
 # Roteiro para vídeo de demonstração (até 3 minutos)
 
-> Grave a tela com o servidor iniciado (`node server/index.js`) e a página aberta em `http://localhost:3000`. Este roteiro é o material de apoio; o arquivo de vídeo deve ser gravado e adicionado ao repositório.
+> Grave a tela com o servidor iniciado (`node server/index.js`) e os painéis abertos em `http://localhost:3000` e `http://localhost:3000/orders`. Este roteiro é o material de apoio; o arquivo de vídeo deve ser gravado e adicionado ao repositório.
 
-## Roteiro sugerido — 2min30s
+## Roteiro sugerido — 2min50s
 
-**0:00–0:20 | Contexto e objetivo**
-“Este é o dashboard administrativo do Thindesk. A proposta é dar ao responsável pela operação uma visão rápida do volume, andamento e perfil dos chamados técnicos, apoiando a priorização da equipe.”
+**0:00–0:25 | Contexto**
+“O enunciado traz dois contextos: chamados técnicos do Thindesk e pedidos de lanchonete/pizzaria. Para atender aos dois sem misturar regras, esta solução tem dois painéis e APIs independentes.”
 
-**0:20–0:50 | Indicadores e filtros**
-“No topo estão o total de chamados, os que aguardam atendimento, os que estão em andamento e os resolvidos, além do tempo médio de resolução. O período pode ser alterado e combinado com filtros de status e categoria. Ao aplicar, o navegador consulta a API e atualiza os dados; também há atualização automática.”
+**0:25–1:05 | Chamados técnicos**
+“No painel Thindesk, os cards acompanham total, chamados em aberto, em andamento e resolvidos. Os gráficos mostram resoluções diárias e status; a lista inclui responsável e considerações técnicas. Posso filtrar por período, status e tipo de chamado.”
 
-**0:50–1:20 | Gráficos e operação**
-“O gráfico de linha acompanha os chamados resolvidos por dia. O gráfico de rosca mostra a distribuição por status, e o ranking destaca as categorias mais atendidas. A tabela permite conferir os chamados recentes, suas prioridades e situação.”
+**1:05–1:45 | Pedidos**
+“No módulo de pedidos, os indicadores mostram volume, pedidos em aberto, em preparo e entregues, com o total de vendas. A série exibe entregas por dia, a distribuição acompanha o status e o ranking identifica as categorias mais vendidas. Filtros de período, status e modalidade atualizam o painel.”
 
-**1:20–1:55 | API e dados**
-“A aplicação expõe endpoints REST para saúde, agregados do dashboard e listagem de chamados. Os registros ficam em SQLite, com índices por datas, status e categoria. As datas inválidas e filtros desconhecidos são rejeitados pela API; falhas de atualização aparecem na própria tela.”
+**1:45–2:20 | API e dados**
+“As APIs REST dos dois módulos têm endpoints de consulta e agregação, usam SQLite e validam as entradas. O modelo de pedidos relaciona pedidos e itens e armazena valores em centavos. Os gráficos distinguem data de abertura da data de atendimento.”
 
-**1:55–2:25 | Decisões e próximos passos**
-“Separei as métricas por significado: cards e status usam data de abertura; atendimentos e tempo médio usam data de resolução. A base inicial é demonstrativa. Para conectar ao ambiente real do Thindesk, é necessário configurar a fonte oficial e mapear seus campos ao modelo da API. O projeto e a documentação ficam no repositório.”
+**2:20–2:50 | Decisões e integração**
+“Os dados atuais são demonstrativos, não dados reais do Thindesk ou de uma lanchonete. Para integração real precisamos da URL, credenciais e esquema oficiais das fontes. A documentação detalha modelos, endpoints e as regras adotadas; o projeto inclui testes automatizados.”
 
 ## Capturas recomendadas
 
-1. Painel carregado com os indicadores e gráficos visíveis.
-2. Aplicação de um período e categoria para mostrar a atualização integrada.
-3. Endpoint `/api/dashboard` aberto no navegador ou terminal para evidenciar o contrato JSON.
-4. README e documentação de arquitetura/API no repositório.
+1. Painel de chamados carregado com indicadores, gráfico e notas técnicas.
+2. Painel de pedidos com indicadores de vendas, gráfico e categorias.
+3. Aplicação de filtros em cada domínio.
+4. Endpoints `/api/dashboard` e `/api/orders/dashboard` para evidenciar os contratos JSON.
+5. README, documentação de arquitetura/API e testes no repositório.

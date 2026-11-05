@@ -23,6 +23,16 @@ test('health endpoint confirms API and SQLite availability', async () => {
   assert.deepEqual(await response.json(), { status: 'ok', database: 'sqlite' });
 });
 
+test('both dashboard pages are served by the application', async () => {
+  const [ticketsPage, ordersPage] = await Promise.all([
+    fetch(`${baseUrl}/`),
+    fetch(`${baseUrl}/orders`)
+  ]);
+  assert.equal(ticketsPage.status, 200);
+  assert.equal(ordersPage.status, 200);
+  assert.match(await ordersPage.text(), /Painel de pedidos/);
+});
+
 test('dashboard returns metrics, a complete daily series and resolved type ranking', async () => {
   const today = new Date().toISOString().slice(0, 10);
   const from = new Date(Date.now() - 59 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -58,4 +68,33 @@ test('tickets endpoint returns filtered ticket records', async () => {
   const data = await response.json();
   assert.ok(data.items.every((ticket) => ticket.status === 'aberto'));
   assert.ok(data.items.length <= 100);
+});
+
+test('orders dashboard returns sales, daily service, category ranking and order types', async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const from = new Date(Date.now() - 59 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const response = await fetch(`${baseUrl}/api/orders/dashboard?from=${from}&to=${today}`);
+  assert.equal(response.status, 200);
+  const data = await response.json();
+
+  assert.equal(data.summary.total, 90);
+  assert.ok(data.summary.delivered > 0);
+  assert.ok(data.summary.revenueCents > 0);
+  assert.equal(data.statusBreakdown.reduce((sum, item) => sum + item.total, 0), 90);
+  assert.equal(data.dailyOrders.length, 60);
+  assert.ok(data.topCategories.length > 0);
+  assert.equal(data.latestOrders.length, 8);
+  assert.deepEqual(data.orderTypes.map((type) => type.value), ['delivery', 'retirada', 'mesa']);
+});
+
+test('orders filters are isolated from ticket statuses and validate order types', async () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const response = await fetch(`${baseUrl}/api/orders?from=${today}&to=${today}&status=entregue&type=delivery`);
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.ok(data.items.every((order) => order.status === 'entregue' && order.order_type === 'delivery'));
+
+  const invalid = await fetch(`${baseUrl}/api/orders/dashboard?type=hardware`);
+  assert.equal(invalid.status, 400);
+  assert.match((await invalid.json()).error, /Tipo de pedido inválido/);
 });
