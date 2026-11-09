@@ -216,7 +216,7 @@ Grave a tela com `node server/index.js` em execução e os painéis abertos. Est
 - **0:25–1:05 | Chamados técnicos:** “No painel Thindesk, os cards acompanham total, chamados em aberto, em andamento e resolvidos. Os gráficos mostram resoluções diárias e status; a lista inclui responsável e considerações técnicas. Posso filtrar por período, status e tipo de chamado.”
 - **1:05–1:45 | Pedidos:** “No módulo de pedidos, os indicadores mostram volume, pedidos em aberto, em preparo e entregues, com o total de vendas. A série exibe entregas por dia, a distribuição acompanha o status e o ranking identifica as categorias mais vendidas. Filtros de período, status e modalidade atualizam o painel.”
 - **1:45–2:20 | API e dados:** “As APIs REST dos dois módulos têm endpoints de consulta e agregação, usam SQLite e validam as entradas. O modelo de pedidos relaciona pedidos e itens e armazena valores em centavos. Os gráficos distinguem data de abertura da data de atendimento.”
-- **2:20–2:50 | Decisões e integração:** “Os dados atuais são demonstrativos, não dados reais do Thindesk ou de uma lanchonete. Para integração real precisamos da URL, credenciais e esquema oficiais das fontes. A documentação detalha modelos, endpoints e as regras adotadas; o projeto inclui testes automatizados.”
+- **2:20–2:50 | Decisões e integração:** “Os dados atuais são demonstrativos, não dados reais do Thindesk ou de uma lanchonete. Para integração real precisamos da URL, credenciais e esquema oficiais das fontes. O README detalha modelos, endpoints e as regras adotadas; o projeto inclui testes automatizados.”
 
 ### Capturas recomendadas
 
@@ -224,8 +224,8 @@ Grave a tela com `node server/index.js` em execução e os painéis abertos. Est
 2. Painel de pedidos com indicadores de vendas, gráfico e categorias.
 3. Aplicação dos filtros em cada domínio.
 4. Endpoints `/api/dashboard` e `/api/orders/dashboard` com suas respostas JSON.
-5. README, documentação de arquitetura/API e testes no repositório.
+5. README e testes no repositório.
 
 ## Branch e entregáveis
 
-O branch de implementação é `feature/dashboard-admin-api`. A documentação detalhada também está em [`docs/arquitetura-api.md`](docs/arquitetura-api.md), e o roteiro de vídeo em [`docs/apresentacao.md`](docs/apresentacao.md). O vídeo final precisa ser gravado e adicionado ao repositório.
+O branch de implementação é `feature/dashboard-admin-api`. Este README reúne a análise, modelo de dados, contratos da API, decisões de projeto e roteiro de apresentação. O vídeo final precisa ser gravado e adicionado ao repositório.
