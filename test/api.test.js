@@ -23,14 +23,17 @@ test('health endpoint confirms API and SQLite availability', async () => {
   assert.deepEqual(await response.json(), { status: 'ok', database: 'sqlite' });
 });
 
-test('both dashboard pages are served by the application', async () => {
+test('both dashboard pages are served with an update timestamp', async () => {
   const [ticketsPage, ordersPage] = await Promise.all([
     fetch(`${baseUrl}/`),
     fetch(`${baseUrl}/orders`)
   ]);
   assert.equal(ticketsPage.status, 200);
   assert.equal(ordersPage.status, 200);
-  assert.match(await ordersPage.text(), /Painel de pedidos/);
+  const [ticketsHtml, ordersHtml] = await Promise.all([ticketsPage.text(), ordersPage.text()]);
+  assert.match(ticketsHtml, /id="lastUpdated"/);
+  assert.match(ordersHtml, /Painel de pedidos/);
+  assert.match(ordersHtml, /id="lastUpdated"/);
 });
 
 test('dashboard returns metrics, a complete daily series and resolved type ranking', async () => {

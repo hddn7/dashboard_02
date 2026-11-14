@@ -13,7 +13,7 @@ const statusColors = {
 const numberFormat = new Intl.NumberFormat('pt-BR');
 const elements = Object.fromEntries([
   'fromDate', 'toDate', 'statusFilter', 'typeFilter', 'applyFilters', 'clearFilters',
-  'refreshButton', 'errorBanner', 'metricTotal', 'metricOpen', 'metricProgress',
+  'refreshButton', 'lastUpdated', 'errorBanner', 'metricTotal', 'metricOpen', 'metricProgress',
   'metricResolved', 'averageResolution', 'resolutionChart', 'resolutionEmpty',
   'statusChart', 'statusTotal', 'statusLegend', 'typeRanking', 'ticketRows'
 ].map((id) => [id, document.getElementById(id)]));
@@ -48,6 +48,10 @@ async function loadDashboard() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? 'Não foi possível carregar o dashboard.');
     renderDashboard(data);
+    elements.lastUpdated.textContent = `Atualizado às ${new Intl.DateTimeFormat('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date())}`;
   } catch (error) {
     elements.errorBanner.textContent = `Falha ao atualizar os dados: ${error.message}`;
     elements.errorBanner.hidden = false;
