@@ -8,7 +8,7 @@ const statusLabels = {
 const statusColors = {
   recebido: '#e5a944',
   preparando: '#8b71dc',
-  pronto: '#58a0cd',
+  pronto: '#7d8794',
   entregue: '#42b584',
   cancelado: '#d97070'
 };
@@ -146,7 +146,7 @@ function drawOrdersChart(rows) {
       if (index === 0) context.moveTo(point.x, point.y);
       else context.lineTo(point.x, point.y);
     });
-    context.strokeStyle = '#6274e8';
+    context.strokeStyle = '#65717d';
     context.lineWidth = 2;
     context.lineJoin = 'round';
     context.stroke();

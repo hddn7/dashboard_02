@@ -1,289 +1,289 @@
-const statusLabels = {
+const rotulosStatus = {
   aberto: 'Aberto',
   em_andamento: 'Em andamento',
   aguardando: 'Aguardando',
   resolvido: 'Resolvido'
 };
-const statusColors = {
+const coresStatus = {
   aberto: '#e5a944',
   em_andamento: '#8b71dc',
-  aguardando: '#58a0cd',
+  aguardando: '#7d8794',
   resolvido: '#42b584'
 };
-const numberFormat = new Intl.NumberFormat('pt-BR');
-const elements = Object.fromEntries([
+const formatadorNumerico = new Intl.NumberFormat('pt-BR');
+const elementos = Object.fromEntries([
   'fromDate', 'toDate', 'statusFilter', 'typeFilter', 'applyFilters', 'clearFilters',
   'refreshButton', 'lastUpdated', 'errorBanner', 'metricTotal', 'metricOpen', 'metricProgress',
   'metricResolved', 'averageResolution', 'resolutionChart', 'resolutionEmpty',
   'statusChart', 'statusTotal', 'statusLegend', 'typeRanking', 'ticketRows'
-].map((id) => [id, document.getElementById(id)]));
+].map((identificador) => [identificador, document.getElementById(identificador)]));
 
-function dateInputValue(date) {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+function valorCampoData(data) {
+  return new Date(data.getTime() - data.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
 
-function initializeDates() {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(from.getDate() - 29);
-  elements.fromDate.value = dateInputValue(from);
-  elements.toDate.value = dateInputValue(today);
+function inicializarDatas() {
+  const hoje = new Date();
+  const inicio = new Date(hoje);
+  inicio.setDate(inicio.getDate() - 29);
+  elementos.fromDate.value = valorCampoData(inicio);
+  elementos.toDate.value = valorCampoData(hoje);
 }
 
-function queryString() {
-  const params = new URLSearchParams({
-    from: elements.fromDate.value,
-    to: elements.toDate.value
+function montarParametrosConsulta() {
+  const parametros = new URLSearchParams({
+    from: elementos.fromDate.value,
+    to: elementos.toDate.value
   });
-  if (elements.statusFilter.value) params.set('status', elements.statusFilter.value);
-  if (elements.typeFilter.value) params.set('type', elements.typeFilter.value);
-  return params.toString();
+  if (elementos.statusFilter.value) parametros.set('status', elementos.statusFilter.value);
+  if (elementos.typeFilter.value) parametros.set('type', elementos.typeFilter.value);
+  return parametros.toString();
 }
 
-async function loadDashboard() {
-  elements.errorBanner.hidden = true;
-  elements.applyFilters.disabled = true;
+async function carregarPainel() {
+  elementos.errorBanner.hidden = true;
+  elementos.applyFilters.disabled = true;
   try {
-    const response = await fetch(`/api/dashboard?${queryString()}`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error ?? 'Não foi possível carregar o dashboard.');
-    renderDashboard(data);
-    elements.lastUpdated.textContent = `Atualizado às ${new Intl.DateTimeFormat('pt-BR', {
+    const resposta = await fetch(`/api/dashboard?${montarParametrosConsulta()}`);
+    const dados = await resposta.json();
+    if (!resposta.ok) throw new Error(dados.error ?? 'Não foi possível carregar o painel.');
+    exibirPainel(dados);
+    elementos.lastUpdated.textContent = `Atualizado às ${new Intl.DateTimeFormat('pt-BR', {
       hour: '2-digit',
       minute: '2-digit'
     }).format(new Date())}`;
-  } catch (error) {
-    elements.errorBanner.textContent = `Falha ao atualizar os dados: ${error.message}`;
-    elements.errorBanner.hidden = false;
+  } catch (erro) {
+    elementos.errorBanner.textContent = `Falha ao atualizar os dados: ${erro.message}`;
+    elementos.errorBanner.hidden = false;
   } finally {
-    elements.applyFilters.disabled = false;
+    elementos.applyFilters.disabled = false;
   }
 }
 
-function updateDashboardView(data) {
-  window.dashboardData = data;
-  const { summary } = data;
-  elements.metricTotal.textContent = numberFormat.format(summary.total);
-  elements.metricOpen.textContent = numberFormat.format(summary.open + summary.waiting);
-  elements.metricProgress.textContent = numberFormat.format(summary.inProgress);
-  elements.metricResolved.textContent = numberFormat.format(summary.resolved);
-  elements.averageResolution.textContent = `Média de resolução: ${summary.averageResolutionHours.toLocaleString('pt-BR')} h`;
-  elements.statusTotal.textContent = numberFormat.format(summary.total);
-  populateTypes(data.ticketTypes);
-  drawResolutionChart(data.dailyResolution);
-  drawStatusChart(data.statusBreakdown);
-  renderRanking(data.resolvedByType);
-  renderTickets(data.latestTickets);
+function atualizarVisualizacaoPainel(dados) {
+  window.dadosPainel = dados;
+  const { summary: resumo } = dados;
+  elementos.metricTotal.textContent = formatadorNumerico.format(resumo.total);
+  elementos.metricOpen.textContent = formatadorNumerico.format(resumo.open + resumo.waiting);
+  elementos.metricProgress.textContent = formatadorNumerico.format(resumo.inProgress);
+  elementos.metricResolved.textContent = formatadorNumerico.format(resumo.resolved);
+  elementos.averageResolution.textContent = `Média de resolução: ${resumo.averageResolutionHours.toLocaleString('pt-BR')} h`;
+  elementos.statusTotal.textContent = formatadorNumerico.format(resumo.total);
+  preencherTipos(dados.ticketTypes);
+  desenharGraficoResolucao(dados.dailyResolution);
+  desenharGraficoStatus(dados.statusBreakdown);
+  exibirRanking(dados.resolvedByType);
+  exibirChamados(dados.latestTickets);
 }
 
-function populateTypes(types) {
-  const selected = elements.typeFilter.value;
-  elements.typeFilter.replaceChildren(new Option('Todos os tipos', ''));
-  for (const type of types) elements.typeFilter.add(new Option(type, type));
-  elements.typeFilter.value = selected;
+function preencherTipos(tipos) {
+  const selecionado = elementos.typeFilter.value;
+  elementos.typeFilter.replaceChildren(new Option('Todos os tipos', ''));
+  for (const tipo of tipos) elementos.typeFilter.add(new Option(tipo, tipo));
+  elementos.typeFilter.value = selecionado;
 }
 
-function drawResolutionChart(rows) {
-  const canvas = elements.resolutionChart;
-  const context = prepareCanvas(canvas);
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  elements.resolutionEmpty.hidden = rows.some((row) => row.total > 0);
-  if (!rows.length) return;
+function desenharGraficoResolucao(registros) {
+  const tela = elementos.resolutionChart;
+  const contexto = prepararTela(tela);
+  const largura = tela.clientWidth;
+  const altura = tela.clientHeight;
+  elementos.resolutionEmpty.hidden = registros.some((registro) => registro.total > 0);
+  if (!registros.length) return;
 
-  const padding = { top: 16, right: 12, bottom: 31, left: 31 };
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const max = Math.max(4, Math.ceil(Math.max(...rows.map((row) => row.total)) / 2) * 2);
-  context.font = '9px DM Sans, sans-serif';
-  context.textAlign = 'right';
-  context.textBaseline = 'middle';
-  for (let tick = 0; tick <= 4; tick += 1) {
-    const y = padding.top + chartHeight * tick / 4;
-    context.strokeStyle = '#edf0f5';
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(padding.left, y);
-    context.lineTo(width - padding.right, y);
-    context.stroke();
-    context.fillStyle = '#a1a8b4';
-    context.fillText(String(Math.round(max * (4 - tick) / 4)), padding.left - 8, y);
+  const margens = { top: 16, right: 12, bottom: 31, left: 31 };
+  const larguraGrafico = largura - margens.left - margens.right;
+  const alturaGrafico = altura - margens.top - margens.bottom;
+  const maximo = Math.max(4, Math.ceil(Math.max(...registros.map((registro) => registro.total)) / 2) * 2);
+  contexto.font = '9px DM Sans, sans-serif';
+  contexto.textAlign = 'right';
+  contexto.textBaseline = 'middle';
+  for (let marca = 0; marca <= 4; marca += 1) {
+    const posicaoY = margens.top + alturaGrafico * marca / 4;
+    contexto.strokeStyle = '#edf0f5';
+    contexto.lineWidth = 1;
+    contexto.beginPath();
+    contexto.moveTo(margens.left, posicaoY);
+    contexto.lineTo(largura - margens.right, posicaoY);
+    contexto.stroke();
+    contexto.fillStyle = '#a1a8b4';
+    contexto.fillText(String(Math.round(maximo * (4 - marca) / 4)), margens.left - 8, posicaoY);
   }
 
-  const step = rows.length > 1 ? chartWidth / (rows.length - 1) : chartWidth;
-  const points = rows.map((row, index) => ({
-    x: padding.left + (rows.length > 1 ? step * index : chartWidth / 2),
-    y: padding.top + chartHeight * (1 - row.total / max),
-    row
+  const intervalo = registros.length > 1 ? larguraGrafico / (registros.length - 1) : larguraGrafico;
+  const pontos = registros.map((registro, indice) => ({
+    x: margens.left + (registros.length > 1 ? intervalo * indice : larguraGrafico / 2),
+    y: margens.top + alturaGrafico * (1 - registro.total / maximo),
+    registro
   }));
-  if (points.length > 1) {
-    const gradient = context.createLinearGradient(0, padding.top, 0, height - padding.bottom);
-    gradient.addColorStop(0, 'rgba(86, 105, 232, .19)');
-    gradient.addColorStop(1, 'rgba(86, 105, 232, 0)');
-    context.beginPath();
-    context.moveTo(points[0].x, height - padding.bottom);
-    for (const point of points) context.lineTo(point.x, point.y);
-    context.lineTo(points.at(-1).x, height - padding.bottom);
-    context.closePath();
-    context.fillStyle = gradient;
-    context.fill();
-    context.beginPath();
-    points.forEach((point, index) => {
-      if (index === 0) context.moveTo(point.x, point.y);
-      else context.lineTo(point.x, point.y);
+  if (pontos.length > 1) {
+    const gradiente = contexto.createLinearGradient(0, margens.top, 0, altura - margens.bottom);
+    gradiente.addColorStop(0, 'rgba(101, 113, 125, .16)');
+    gradiente.addColorStop(1, 'rgba(101, 113, 125, 0)');
+    contexto.beginPath();
+    contexto.moveTo(pontos[0].x, altura - margens.bottom);
+    for (const ponto of pontos) contexto.lineTo(ponto.x, ponto.y);
+    contexto.lineTo(pontos.at(-1).x, altura - margens.bottom);
+    contexto.closePath();
+    contexto.fillStyle = gradiente;
+    contexto.fill();
+    contexto.beginPath();
+    pontos.forEach((ponto, indice) => {
+      if (indice === 0) contexto.moveTo(ponto.x, ponto.y);
+      else contexto.lineTo(ponto.x, ponto.y);
     });
-    context.strokeStyle = '#6274e8';
-    context.lineWidth = 2;
-    context.lineJoin = 'round';
-    context.stroke();
+    contexto.strokeStyle = '#65717d';
+    contexto.lineWidth = 2;
+    contexto.lineJoin = 'round';
+    contexto.stroke();
   }
 
-  const labelCount = Math.min(6, rows.length);
-  const labelIndexes = new Set(Array.from({ length: labelCount }, (_, index) =>
-    labelCount === 1 ? 0 : Math.round(index * (rows.length - 1) / (labelCount - 1))
+  const quantidadeRotulos = Math.min(6, registros.length);
+  const indicesRotulos = new Set(Array.from({ length: quantidadeRotulos }, (_, indice) =>
+    quantidadeRotulos === 1 ? 0 : Math.round(indice * (registros.length - 1) / (quantidadeRotulos - 1))
   ));
-  context.textAlign = 'center';
-  context.textBaseline = 'top';
-  context.fillStyle = '#9aa2af';
-  for (const index of labelIndexes) {
-    const point = points[index];
-    const label = new Date(`${point.row.date}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-    context.fillText(label.replace('.', ''), point.x, height - padding.bottom + 10);
+  contexto.textAlign = 'center';
+  contexto.textBaseline = 'top';
+  contexto.fillStyle = '#9aa2af';
+  for (const indice of indicesRotulos) {
+    const ponto = pontos[indice];
+    const rotulo = new Date(`${ponto.registro.date}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    contexto.fillText(rotulo.replace('.', ''), ponto.x, altura - margens.bottom + 10);
   }
 }
 
-function prepareCanvas(canvas) {
-  const ratio = window.devicePixelRatio || 1;
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  canvas.width = Math.round(width * ratio);
-  canvas.height = Math.round(height * ratio);
-  const context = canvas.getContext('2d');
-  context.scale(ratio, ratio);
-  return context;
+function prepararTela(tela) {
+  const proporcao = window.devicePixelRatio || 1;
+  const largura = tela.clientWidth;
+  const altura = tela.clientHeight;
+  tela.width = Math.round(largura * proporcao);
+  tela.height = Math.round(altura * proporcao);
+  const contexto = tela.getContext('2d');
+  contexto.scale(proporcao, proporcao);
+  return contexto;
 }
 
-function drawStatusChart(rows) {
-  const canvas = elements.statusChart;
-  const context = prepareCanvas(canvas);
-  const total = rows.reduce((sum, row) => sum + row.total, 0);
-  const center = canvas.clientWidth / 2;
-  const radius = Math.min(canvas.clientWidth, canvas.clientHeight) * 0.43;
-  const width = 17;
-  let angle = -Math.PI / 2;
-  context.lineWidth = width;
-  context.lineCap = 'butt';
-  for (const row of rows) {
-    const span = total ? (row.total / total) * Math.PI * 2 : Math.PI * 2;
-    context.beginPath();
-    context.arc(center, center, radius, angle, angle + span);
-    context.strokeStyle = row.total ? statusColors[row.status] : '#edf0f5';
-    context.stroke();
-    angle += span;
+function desenharGraficoStatus(registros) {
+  const tela = elementos.statusChart;
+  const contexto = prepararTela(tela);
+  const total = registros.reduce((soma, registro) => soma + registro.total, 0);
+  const centro = tela.clientWidth / 2;
+  const raio = Math.min(tela.clientWidth, tela.clientHeight) * 0.43;
+  const espessura = 17;
+  let angulo = -Math.PI / 2;
+  contexto.lineWidth = espessura;
+  contexto.lineCap = 'butt';
+  for (const registro of registros) {
+    const extensao = total ? (registro.total / total) * Math.PI * 2 : Math.PI * 2;
+    contexto.beginPath();
+    contexto.arc(centro, centro, raio, angulo, angulo + extensao);
+    contexto.strokeStyle = registro.total ? coresStatus[registro.status] : '#edf0f5';
+    contexto.stroke();
+    angulo += extensao;
   }
 
-  elements.statusLegend.replaceChildren(...rows.map((row) => {
+  elementos.statusLegend.replaceChildren(...registros.map((registro) => {
     const item = document.createElement('div');
     item.className = 'legend-item';
-    const dot = document.createElement('span');
-    dot.className = 'legend-dot';
-    dot.style.backgroundColor = statusColors[row.status];
-    const label = document.createElement('span');
-    label.textContent = row.label;
-    const value = document.createElement('span');
-    value.className = 'legend-value';
-    value.textContent = numberFormat.format(row.total);
-    item.append(dot, label, value);
+    const ponto = document.createElement('span');
+    ponto.className = 'legend-dot';
+    ponto.style.backgroundColor = coresStatus[registro.status];
+    const rotulo = document.createElement('span');
+    rotulo.textContent = registro.label;
+    const valor = document.createElement('span');
+    valor.className = 'legend-value';
+    valor.textContent = formatadorNumerico.format(registro.total);
+    item.append(ponto, rotulo, valor);
     return item;
   }));
 }
 
-function renderRanking(rows) {
-  const max = Math.max(1, ...rows.map((row) => row.total));
-  if (!rows.length) {
-    elements.typeRanking.innerHTML = '<div class="empty-state">Nenhum chamado resolvido no período.</div>';
+function exibirRanking(registros) {
+  const maximo = Math.max(1, ...registros.map((registro) => registro.total));
+  if (!registros.length) {
+    elementos.typeRanking.innerHTML = '<div class="empty-state">Nenhum chamado resolvido no período.</div>';
     return;
   }
-  elements.typeRanking.replaceChildren(...rows.slice(0, 5).map((row) => {
+  elementos.typeRanking.replaceChildren(...registros.slice(0, 5).map((registro) => {
     const item = document.createElement('div');
     item.className = 'ranking-item';
-    const label = document.createElement('span');
-    label.textContent = row.type;
-    const track = document.createElement('span');
-    track.className = 'ranking-track';
-    const fill = document.createElement('span');
-    fill.className = 'ranking-fill';
-    fill.style.display = 'block';
-    fill.style.width = `${row.total / max * 100}%`;
-    track.append(fill);
-    const count = document.createElement('span');
-    count.className = 'ranking-count';
-    count.textContent = numberFormat.format(row.total);
-    item.append(label, track, count);
+    const rotulo = document.createElement('span');
+    rotulo.textContent = registro.type;
+    const trilho = document.createElement('span');
+    trilho.className = 'ranking-track';
+    const preenchimento = document.createElement('span');
+    preenchimento.className = 'ranking-fill';
+    preenchimento.style.display = 'block';
+    preenchimento.style.width = `${registro.total / maximo * 100}%`;
+    trilho.append(preenchimento);
+    const quantidade = document.createElement('span');
+    quantidade.className = 'ranking-count';
+    quantidade.textContent = formatadorNumerico.format(registro.total);
+    item.append(rotulo, trilho, quantidade);
     return item;
   }));
 }
 
-function renderTickets(tickets) {
-  if (!tickets.length) {
-    elements.ticketRows.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum chamado encontrado para os filtros aplicados.</td></tr>';
+function exibirChamados(chamados) {
+  if (!chamados.length) {
+    elementos.ticketRows.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum chamado encontrado para os filtros aplicados.</td></tr>';
     return;
   }
-  elements.ticketRows.replaceChildren(...tickets.map((ticket) => {
-    const row = document.createElement('tr');
-    const subjectCell = document.createElement('td');
-    const subject = document.createElement('span');
-    subject.className = 'ticket-subject';
-    subject.textContent = ticket.subject;
-    const id = document.createElement('span');
-    id.className = 'ticket-id';
-    id.textContent = `#TD-${String(ticket.id).padStart(4, '0')} · ${ticket.requester}`;
-    subjectCell.append(subject, id);
+  elementos.ticketRows.replaceChildren(...chamados.map((chamado) => {
+    const linha = document.createElement('tr');
+    const celulaAssunto = document.createElement('td');
+    const assunto = document.createElement('span');
+    assunto.className = 'ticket-subject';
+    assunto.textContent = chamado.subject;
+    const identificador = document.createElement('span');
+    identificador.className = 'ticket-id';
+    identificador.textContent = `#TD-${String(chamado.id).padStart(4, '0')} · ${chamado.requester}`;
+    celulaAssunto.append(assunto, identificador);
 
-    const type = document.createElement('td');
-    type.textContent = ticket.type;
+    const tipo = document.createElement('td');
+    tipo.textContent = chamado.type;
     const status = document.createElement('td');
-    const badge = document.createElement('span');
-    badge.className = `badge ${ticket.status}`;
-    badge.textContent = statusLabels[ticket.status];
-    status.append(badge);
-    const priority = document.createElement('td');
-    priority.className = `priority ${ticket.priority}`;
-    priority.textContent = ticket.priority[0].toUpperCase() + ticket.priority.slice(1);
-    const technicalCell = document.createElement('td');
-    const technician = document.createElement('span');
-    technician.className = 'ticket-technician';
-    technician.textContent = ticket.technician;
-    const note = document.createElement('span');
-    note.className = 'ticket-note';
-    note.textContent = ticket.technical_notes || 'Sem consideração técnica registrada';
-    note.title = ticket.technical_notes || '';
-    technicalCell.append(technician, note);
-    row.append(subjectCell, type, status, priority, technicalCell);
-    return row;
+    const etiqueta = document.createElement('span');
+    etiqueta.className = `badge ${chamado.status}`;
+    etiqueta.textContent = rotulosStatus[chamado.status];
+    status.append(etiqueta);
+    const prioridade = document.createElement('td');
+    prioridade.className = `priority ${chamado.priority}`;
+    prioridade.textContent = chamado.priority[0].toUpperCase() + chamado.priority.slice(1);
+    const celulaTecnica = document.createElement('td');
+    const tecnico = document.createElement('span');
+    tecnico.className = 'ticket-technician';
+    tecnico.textContent = chamado.technician;
+    const observacao = document.createElement('span');
+    observacao.className = 'ticket-note';
+    observacao.textContent = chamado.technical_notes || 'Sem consideração técnica registrada';
+    observacao.title = chamado.technical_notes || '';
+    celulaTecnica.append(tecnico, observacao);
+    linha.append(celulaAssunto, tipo, status, prioridade, celulaTecnica);
+    return linha;
   }));
 }
 
-elements.applyFilters.addEventListener('click', loadDashboard);
-elements.refreshButton.addEventListener('click', loadDashboard);
-elements.clearFilters.addEventListener('click', () => {
-  initializeDates();
-  elements.statusFilter.value = '';
-  elements.typeFilter.value = '';
-  loadDashboard();
+elementos.applyFilters.addEventListener('click', carregarPainel);
+elementos.refreshButton.addEventListener('click', carregarPainel);
+elementos.clearFilters.addEventListener('click', () => {
+  inicializarDatas();
+  elementos.statusFilter.value = '';
+  elementos.typeFilter.value = '';
+  carregarPainel();
 });
 window.addEventListener('resize', () => {
-  if (window.dashboardData) {
-    drawResolutionChart(window.dashboardData.dailyResolution);
-    drawStatusChart(window.dashboardData.statusBreakdown);
+  if (window.dadosPainel) {
+    desenharGraficoResolucao(window.dadosPainel.dailyResolution);
+    desenharGraficoStatus(window.dadosPainel.statusBreakdown);
   }
 });
 
-window.dashboardData = null;
-function renderDashboard(data) {
-  updateDashboardView(data);
+window.dadosPainel = null;
+function exibirPainel(dados) {
+  atualizarVisualizacaoPainel(dados);
 }
 
-initializeDates();
-loadDashboard();
-window.setInterval(loadDashboard, 60_000);
+inicializarDatas();
+carregarPainel();
+window.setInterval(carregarPainel, 60_000);
